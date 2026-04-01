@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>💰 Expense Tracker</title>
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#0b1120">
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  body { font-family: 'Outfit', sans-serif; background: #0b1120; color: #e2e8f0; min-height: 100vh; max-width: 480px; margin: 0 auto; padding-bottom: 80px; }
+  .mono { font-family: 'JetBrains Mono', monospace; }
+  .header { background: linear-gradient(135deg, #1e293b, #0f172a); padding: 24px 20px 20px; border-bottom: 1px solid #1e293b; position: sticky; top: 0; z-index: 10; }
+  .title { font-size: 22px; font-weight: 800; background: linear-gradient(135deg, #38bdf8, #a78bfa); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+  .subtitle { font-size: 12px; color: #64748b; margin-top: 2px; }
+  .badge { display: inline-flex; align-items: center; gap: 4px; font-size: 10px; padding: 3px 8px; border-radius: 12px; margin-left: 8px; }
+  .badge-green { background: #34d39922; color: #34d399; }
+  .badge-yellow { background: #fbbf2422; color: #fbbf24; }
+  .badge-red { background: #ef444422; color: #ef4444; }
+  .header-actions { display: flex; gap: 6px; }
+  .header-btn { padding: 6px 10px; background: #0f172a; border: 1px solid #334155; border-radius: 8px; color: #94a3b8; font-size: 11px; cursor: pointer; font-family: inherit; }
+  .header-btn:hover { background: #1e293b; }
+  .tabs { display: flex; gap: 4px; margin-top: 16px; background: #0f172a; border-radius: 10px; padding: 3px; }
+  .tab { flex: 1; padding: 8px 0; text-align: center; font-size: 13px; font-weight: 600; border: none; border-radius: 8px; cursor: pointer; background: transparent; color: #64748b; font-family: inherit; transition: all 0.2s; }
+  .tab.active { background: #1e293b; color: #f1f5f9; }
+  .body { padding: 16px 20px; }
+  .label { font-size: 11px; font-weight: 600; color: #94a3b8; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 6px; display: block; }
+  .input { width: 100%; padding: 12px 14px; background: #1e293b; border: 1px solid #334155; border-radius: 10px; color: #f1f5f9; font-size: 15px; outline: none; font-family: 'JetBrains Mono', monospace; }
+  .input:focus { border-color: #38bdf8; }
+  .input-big { font-size: 28px; font-weight: 700; text-align: center; }
+  .mb16 { margin-bottom: 16px; }
+  .cat-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+  .cat-btn { padding: 8px 4px; background: #1e293b; border: 1px solid #334155; border-radius: 10px; color: #94a3b8; font-size: 11px; font-weight: 500; cursor: pointer; text-align: center; transition: all 0.15s; font-family: inherit; }
+  .cat-btn.selected { background: #334155; border: 2px solid #38bdf8; color: #f1f5f9; font-weight: 700; }
+  .pay-row { display: flex; flex-wrap: wrap; gap: 6px; }
+  .pay-btn { padding: 8px 14px; background: #1e293b; border: 1px solid #334155; border-radius: 20px; color: #94a3b8; font-size: 12px; font-weight: 500; cursor: pointer; font-family: inherit; transition: all 0.15s; }
+  .pay-btn.selected { background: #334155; border: 2px solid #a78bfa; color: #f1f5f9; font-weight: 700; }
+  .submit-btn { width: 100%; padding: 14px; background: linear-gradient(135deg, #38bdf8, #a78bfa); border: none; border-radius: 12px; color: #0f172a; font-size: 15px; font-weight: 700; cursor: pointer; margin-top: 8px; letter-spacing: 0.5px; font-family: inherit; }
+  .submit-btn:active { transform: scale(0.98); }
+  .submit-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+  .cancel-btn { width: 100%; padding: 14px; background: #334155; border: none; border-radius: 12px; color: #94a3b8; font-size: 15px; font-weight: 700; cursor: pointer; margin-top: 8px; font-family: inherit; }
+  .card { background: #1e293b; border-radius: 14px; padding: 16px; margin-bottom: 12px; }
+  .card-title { font-size: 12px; font-weight: 600; color: #64748b; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 12px; }
+  .filter-row { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 8px; margin-bottom: 12px; }
+  .filter-btn { padding: 6px 14px; background: #1e293b; border: none; border-radius: 20px; color: #94a3b8; font-size: 12px; font-weight: 600; cursor: pointer; white-space: nowrap; flex-shrink: 0; font-family: inherit; }
+  .filter-btn.active { background: #38bdf8; color: #0f172a; }
+  .exp-item { display: flex; align-items: center; gap: 10px; padding: 10px 0; border-bottom: 1px solid #334155; }
+  .exp-icon { width: 38px; height: 38px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; }
+  .exp-info { flex: 1; min-width: 0; }
+  .exp-name { font-size: 14px; font-weight: 600; color: #f1f5f9; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .exp-meta { font-size: 11px; color: #64748b; }
+  .exp-amount { font-size: 15px; font-weight: 700; color: #f1f5f9; }
+  .exp-actions { display: flex; gap: 4px; margin-top: 4px; justify-content: flex-end; }
+  .exp-actions button { background: none; border: none; font-size: 12px; cursor: pointer; padding: 2px; }
+  .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .stat-box { background: #0f172a; border-radius: 10px; padding: 12px; }
+  .stat-label { font-size: 10px; color: #64748b; text-transform: uppercase; letter-spacing: 1px; }
+  .stat-value { font-size: 16px; font-weight: 700; color: #f1f5f9; margin-top: 2px; }
+  .pay-grid { display: flex; flex-wrap: wrap; gap: 8px; }
+  .pay-card { background: #0f172a; border-radius: 10px; padding: 10px 14px; flex: 1 1 calc(50% - 8px); min-width: 120px; }
+  .bar-row { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+  .bar-icon { width: 28px; font-size: 16px; text-align: center; }
+  .bar-label { width: 120px; font-size: 12px; color: #94a3b8; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .bar-track { flex: 1; background: #0f172a; border-radius: 6px; height: 22px; overflow: hidden; }
+  .bar-fill { height: 100%; border-radius: 6px; transition: width 0.5s; min-width: 4px; }
+  .bar-value { width: 80px; text-align: right; font-size: 12px; font-weight: 600; color: #e2e8f0; }
+  .legend { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 14px; justify-content: center; }
+  .legend-item { font-size: 10px; color: #94a3b8; display: flex; align-items: center; gap: 3px; }
+  .legend-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+  .toast { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); background: #334155; color: #f1f5f9; padding: 10px 20px; border-radius: 10px; font-size: 14px; font-weight: 600; z-index: 999; box-shadow: 0 8px 32px rgba(0,0,0,0.4); }
+  .empty { text-align: center; padding: 40px; color: #64748b; }
+  .empty-icon { font-size: 48px; margin-bottom: 12px; }
+  .sync-log { background: #0f172a; border-radius: 8px; padding: 10px; margin-top: 12px; max-height: 120px; overflow-y: auto; font-size: 11px; color: #64748b; font-family: 'JetBrains Mono', monospace; }
+  .sync-log div { padding: 2px 0; }
+  .sync-ok { color: #34d399; }
+  .sync-fail { color: #ef4444; }
+</style>
+</head>
+<body>
+
+<div id="app"></div>
+
+<script>
+// ============================================
+// HARDCODED GOOGLE SHEET URL - NO SETUP NEEDED
+// ============================================
+const SHEET_URL = "https://script.google.com/macros/s/AKfycbzJ627sg7q-NpjhJqSMx8MGTiEzh3z4W3lhOsAHmE9FlObinWQrINXecxoxr_bbowHSRw/exec";
+
+const CATEGORIES = [
+  { name: "Food & Dining", icon: "🍕", color: "#FF6B6B" },
+  { name: "Transport", icon: "🚗", color: "#4ECDC4" },
+  { name: "Shopping", icon: "🛍️", color: "#A78BFA" },
+  { name: "Bills & Utilities", icon: "💡", color: "#FBBF24" },
+  { name: "Rent & Housing", icon: "🏠", color: "#F97316" },
+  { name: "Health", icon: "💊", color: "#34D399" },
+  { name: "Entertainment", icon: "🎬", color: "#EC4899" },
+  { name: "Education", icon: "📚", color: "#60A5FA" },
+  { name: "Personal Care", icon: "✂️", color: "#F472B6" },
+  { name: "Travel", icon: "✈️", color: "#38BDF8" },
+  { name: "EMI & Loans", icon: "🏦", color: "#FB923C" },
+  { name: "Investments", icon: "📈", color: "#2DD4BF" },
+  { name: "Gifts & Donations", icon: "🎁", color: "#C084FC" },
+  { name: "Miscellaneous", icon: "📦", color: "#94A3B8" },
+];
+
+const PAYMENT_MODES = ["Cash", "UPI", "Credit Card", "Debit Card", "Net Banking", "Wallet"];
+const MONTHS = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+
+let state = {
+  expenses: [],
+  view: "form",
+  date: getToday(),
+  amount: "",
+  category: "",
+  paymentMode: "UPI",
+  description: "",
+  filterMonth: "all",
+  editingId: null,
+  syncing: false,
+  toast: "",
+  syncLog: [],
+  lastSyncStatus: "unknown",
+};
+
+function getToday() { return new Date().toISOString().split("T")[0]; }
+function formatDate(s) { const d = new Date(s); return `${d.getDate()} ${MONTHS[d.getMonth()]} ${d.getFullYear()}`; }
+function formatCurrency(n) { return "₹" + Number(n).toLocaleString("en-IN", { minimumFractionDigits: 0, maximumFractionDigits: 2 }); }
+function timeNow() { return new Date().toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit", second: "2-digit" }); }
+
+function loadState() {
+  try { state.expenses = JSON.parse(localStorage.getItem("et-expenses") || "[]"); } catch(e) {}
+}
+
+function saveExpenses() {
+  localStorage.setItem("et-expenses", JSON.stringify(state.expenses));
+}
+
+function showToast(msg) {
+  state.toast = msg;
+  render();
+  setTimeout(() => { state.toast = ""; render(); }, 2500);
+}
+
+function addSyncLog(msg, ok) {
+  state.syncLog.unshift({ msg, ok, time: timeNow() });
+  if (state.syncLog.length > 20) state.syncLog.pop();
+  state.lastSyncStatus = ok ? "ok" : "fail";
+}
+
+// ═══════════════════════════════════════════
+// GOOGLE SHEETS SYNC
+// ═══════════════════════════════════════════
+async function sendToSheet(entry) {
+  state.syncing = true;
+  render();
+
+  const payload = {
+    date: entry.date,
+    amount: entry.amount,
+    category: entry.category,
+    paymentMode: entry.paymentMode,
+    description: entry.description || "",
+  };
+
+  try {
+    // Try fetch with redirect follow
+    const response = await fetch(SHEET_URL, {
+      method: "POST",
+      headers: { "Content-Type": "text/plain;charset=utf-8" },
+      body: JSON.stringify(payload),
+      redirect: "follow",
+    });
+
+    if (response.ok) {
+      const text = await response.text();
+      try {
+        const json = JSON.parse(text);
+        if (json.status === "success") {
+          addSyncLog(`✅ Synced: ₹${entry.amount} - ${entry.category}`, true);
+        } else {
+          addSyncLog(`⚠️ Response: ${text.substring(0, 50)}`, false);
+        }
+      } catch(e) {
+        // CORS blocked redirect - fall back to no-cors
+        await fetchNoCors(payload, entry);
+      }
+    } else {
+      addSyncLog(`❌ HTTP ${response.status}`, false);
+      await fetchNoCors(payload, entry);
+    }
+  } catch(e) {
+    // CORS error - try no-cors
+    try {
+      await fetchNoCors(payload, entry);
+    } catch(e2) {
+      addSyncLog(`❌ Failed: ${e2.message}`, false);
+    }
+  }
+
+  state.syncing = false;
+  render();
+}
+
+async function fetchNoCors(payload, entry) {
+  await fetch(SHEET_URL, {
+    method: "POST",
+    mode: "no-cors",
+    headers: { "Content-Type": "text/plain;charset=utf-8" },
+    body: JSON.stringify(payload),
+  });
+  addSyncLog(`📤 Sent: ₹${entry.amount} - ${entry.category}`, true);
+}
+
+// ═══════════════════════════════════════════
+
+async function handleSubmit() {
+  if (!state.amount || !state.category || !state.date) {
+    showToast("⚠️ Fill amount, category & date");
+    return;
+  }
+  const entry = {
+    id: state.editingId || Date.now().toString(),
+    date: state.date,
+    amount: parseFloat(state.amount),
+    category: state.category,
+    paymentMode: state.paymentMode,
+    description: state.description.trim(),
+  };
+
+  if (state.editingId) {
+    state.expenses = state.expenses.map(e => e.id === state.editingId ? entry : e);
+    state.editingId = null;
+    saveExpenses();
+    showToast("✅ Updated!");
+  } else {
+    state.expenses.unshift(entry);
+    saveExpenses();
+    render();
+    await sendToSheet(entry);
+    showToast("✅ Added & synced to Sheet!");
+  }
+
+  state.amount = ""; state.category = ""; state.description = ""; state.date = getToday(); state.paymentMode = "UPI";
+  render();
+  const inp = document.getElementById("amount-input");
+  if (inp) inp.focus();
+}
+
+function handleEdit(id) {
+  const exp = state.expenses.find(e => e.id === id);
+  if (!exp) return;
+  state.view = "form"; state.date = exp.date; state.amount = exp.amount.toString();
+  state.category = exp.category; state.paymentMode = exp.paymentMode;
+  state.description = exp.description || ""; state.editingId = exp.id;
+  render();
+}
+
+function handleDelete(id) {
+  state.expenses = state.expenses.filter(e => e.id !== id);
+  saveExpenses();
+  showToast("🗑️ Deleted");
+  render();
+}
+
+function handleExportCSV() {
+  const filtered = getFilteredExpenses();
+  const h = "Date,Amount,Category,Payment Mode,Description";
+  const rows = filtered.map(e => `${e.date},${e.amount},"${e.category}","${e.paymentMode}","${(e.description||"").replace(/"/g,'""')}"`);
+  const blob = new Blob(["\ufeff" + h + "\n" + rows.join("\n")], { type: "text/csv;charset=utf-8" });
+  const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = "expenses.csv"; a.click();
+  showToast("📥 CSV downloaded!");
+}
+
+function getFilteredExpenses() {
+  if (state.filterMonth === "all") return state.expenses;
+  return state.expenses.filter(e => {
+    const d = new Date(e.date);
+    return `${d.getFullYear()}-${d.getMonth()}` === state.filterMonth;
+  });
+}
+
+function getUniqueMonths() {
+  return [...new Set(state.expenses.map(e => {
+    const d = new Date(e.date); return `${d.getFullYear()}-${d.getMonth()}`;
+  }))].sort().reverse();
+}
+
+function renderDonut(data, total) {
+  const size = 160, stroke = 28, r = (size - stroke) / 2, circ = 2 * Math.PI * r;
+  let off = 0;
+  let circles = `<circle cx="${size/2}" cy="${size/2}" r="${r}" fill="none" stroke="#0f172a" stroke-width="${stroke}"/>`;
+  data.filter(d => d.value > 0).forEach(d => {
+    const pct = d.value / (total || 1);
+    circles += `<circle cx="${size/2}" cy="${size/2}" r="${r}" fill="none" stroke="${d.color}" stroke-width="${stroke}" stroke-dasharray="${circ*pct} ${circ*(1-pct)}" stroke-dashoffset="${-off*circ}" transform="rotate(-90 ${size/2} ${size/2})" style="transition:all 0.5s"/>`;
+    off += pct;
+  });
+  return `<div style="position:relative;width:${size}px;height:${size}px;margin:0 auto">
+    <svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}">${circles}</svg>
+    <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center">
+      <div style="font-size:11px;color:#94a3b8;letter-spacing:1px">TOTAL</div>
+      <div class="mono" style="font-size:18px;font-weight:700;color:#f1f5f9">${formatCurrency(total)}</div>
+    </div>
+  </div>`;
+}
+
+// ── RENDER ──
+function render() {
+  const app = document.getElementById("app");
+
+  const filtered = getFilteredExpenses();
+  const total = filtered.reduce((s, e) => s + e.amount, 0);
+  const catTotals = CATEGORIES.map(c => ({ ...c, value: filtered.filter(e => e.category === c.name).reduce((s, e) => s + e.amount, 0) })).filter(c => c.value > 0).sort((a, b) => b.value - a.value);
+  const maxCat = catTotals.length ? catTotals[0].value : 0;
+  const payTotals = PAYMENT_MODES.map(p => ({ name: p, value: filtered.filter(e => e.paymentMode === p).reduce((s, e) => s + e.amount, 0) })).filter(p => p.value > 0);
+  const months = getUniqueMonths();
+
+  let syncBadge = '';
+  if (state.syncing) {
+    syncBadge = '<span class="badge badge-yellow">⏳ Syncing...</span>';
+  } else if (state.lastSyncStatus === "ok") {
+    syncBadge = '<span class="badge badge-green">☁️ Sheet connected</span>';
+  } else if (state.lastSyncStatus === "fail") {
+    syncBadge = '<span class="badge badge-red">❌ Sync error</span>';
+  } else {
+    syncBadge = '<span class="badge badge-green">☁️ Ready</span>';
+  }
+
+  let html = `
+    <div class="header">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <div>
+          <h1 class="title">💰 Expense Tracker</h1>
+          <div class="subtitle">${state.expenses.length} transactions ${syncBadge}</div>
+        </div>
+        <div class="header-actions">
+          <button class="header-btn" onclick="handleExportCSV()" ${!state.expenses.length?'disabled':''}>📥 CSV</button>
+          <button class="header-btn" onclick="resetAll()" ${!state.expenses.length?'disabled':''}>🔄</button>
+        </div>
+      </div>
+      <div class="tabs">
+        <button class="tab ${state.view==='form'?'active':''}" onclick="switchView('form')">+ Add</button>
+        <button class="tab ${state.view==='dashboard'?'active':''}" onclick="switchView('dashboard')">📊 Dashboard</button>
+        <button class="tab ${state.view==='list'?'active':''}" onclick="switchView('list')">📋 History</button>
+      </div>
+    </div>
+    <div class="body">`;
+
+  // ── FORM ──
+  if (state.view === "form") {
+    html += `
+      <div class="mb16">
+        <label class="label">Amount (₹)</label>
+        <input id="amount-input" class="input input-big mono" type="number" inputmode="decimal" placeholder="0" value="${state.amount}" oninput="state.amount=this.value" onkeydown="if(event.key==='Enter')handleSubmit()">
+      </div>
+      <div class="mb16">
+        <label class="label">Date</label>
+        <input class="input" type="date" value="${state.date}" onchange="state.date=this.value">
+      </div>
+      <div class="mb16">
+        <label class="label">Category</label>
+        <div class="cat-grid">
+          ${CATEGORIES.map(c => `<button class="cat-btn ${state.category===c.name?'selected':''}" onclick="state.category='${c.name}';render()">${c.icon} ${c.name.split(' ')[0]}</button>`).join("")}
+        </div>
+      </div>
+      <div class="mb16">
+        <label class="label">Payment Mode</label>
+        <div class="pay-row">
+          ${PAYMENT_MODES.map(p => `<button class="pay-btn ${state.paymentMode===p?'selected':''}" onclick="state.paymentMode='${p}';render()">${p}</button>`).join("")}
+        </div>
+      </div>
+      <div class="mb16">
+        <label class="label">Description (optional)</label>
+        <input class="input" type="text" placeholder="e.g. Swiggy order, cab to office..." value="${state.description.replace(/"/g, '&quot;')}" oninput="state.description=this.value" onkeydown="if(event.key==='Enter')handleSubmit()">
+      </div>
+      <button class="submit-btn" onclick="handleSubmit()" ${state.syncing?'disabled':''}>${state.syncing ? "⏳ Saving & syncing..." : state.editingId ? "✏️ Update Expense" : "✅ Add Expense"}</button>
+      ${state.editingId ? `<button class="cancel-btn" onclick="cancelEdit()">Cancel</button>` : ""}
+
+      ${state.syncLog.length ? `
+        <div style="margin-top:16px">
+          <div class="label">Sync Log</div>
+          <div class="sync-log">
+            ${state.syncLog.map(l => `<div class="${l.ok ? 'sync-ok' : 'sync-fail'}">[${l.time}] ${l.msg}</div>`).join("")}
+          </div>
+        </div>` : ""}
+    `;
+  }
+
+  // ── DASHBOARD ──
+  if (state.view === "dashboard") {
+    html += renderFilters(months);
+    if (!filtered.length) {
+      html += `<div class="empty"><div class="empty-icon">📭</div>No expenses yet! Go to + Add tab.</div>`;
+    } else {
+      html += `<div class="card"><div class="card-title">Spending Overview</div>${renderDonut(catTotals, total)}
+        <div class="legend">${catTotals.slice(0,6).map(c => `<span class="legend-item"><span class="legend-dot" style="background:${c.color}"></span>${c.name.split(' ')[0]}</span>`).join("")}</div></div>`;
+      html += `<div class="card"><div class="card-title">By Category</div>
+        ${catTotals.map(c => `<div class="bar-row"><span class="bar-icon">${c.icon}</span><span class="bar-label">${c.name}</span><div class="bar-track"><div class="bar-fill" style="width:${maxCat?(c.value/maxCat)*100:0}%;background:linear-gradient(90deg,${c.color},${c.color}aa)"></div></div><span class="bar-value mono">${formatCurrency(c.value)}</span></div>`).join("")}
+      </div>`;
+      html += `<div class="card"><div class="card-title">By Payment Mode</div><div class="pay-grid">
+        ${payTotals.map(p => `<div class="pay-card"><div style="font-size:11px;color:#64748b">${p.name}</div><div class="mono" style="font-size:16px;font-weight:700;color:#f1f5f9">${formatCurrency(p.value)}</div><div style="font-size:10px;color:#64748b">${((p.value/total)*100).toFixed(1)}%</div></div>`).join("")}
+      </div></div>`;
+      const stats = [
+        { l: "Transactions", v: filtered.length },
+        { l: "Average", v: formatCurrency(total / filtered.length) },
+        { l: "Biggest", v: formatCurrency(Math.max(...filtered.map(e => e.amount))) },
+        { l: "Top Category", v: (catTotals[0]?.icon||"") + " " + (catTotals[0]?.name.split(" ")[0]||"-") },
+      ];
+      html += `<div class="card"><div class="card-title">Quick Stats</div><div class="stats-grid">
+        ${stats.map(s => `<div class="stat-box"><div class="stat-label">${s.l}</div><div class="stat-value">${s.v}</div></div>`).join("")}
+      </div></div>`;
+    }
+  }
+
+  // ── LIST ──
+  if (state.view === "list") {
+    html += renderFilters(months);
+    if (!filtered.length) {
+      html += `<div class="empty"><div class="empty-icon">📭</div>No expenses found.</div>`;
+    } else {
+      const sorted = [...filtered].sort((a,b) => new Date(b.date) - new Date(a.date));
+      html += `<div class="card"><div class="card-title">${filtered.length} expenses · ${formatCurrency(total)}</div>
+        ${sorted.map(exp => {
+          const cat = CATEGORIES.find(c => c.name === exp.category);
+          return `<div class="exp-item">
+            <div class="exp-icon" style="background:${cat?.color||'#334155'}22">${cat?.icon||'📦'}</div>
+            <div class="exp-info">
+              <div class="exp-name">${exp.description || exp.category}</div>
+              <div class="exp-meta">${formatDate(exp.date)} · ${exp.paymentMode}</div>
+            </div>
+            <div style="text-align:right;flex-shrink:0">
+              <div class="exp-amount mono">${formatCurrency(exp.amount)}</div>
+              <div class="exp-actions">
+                <button onclick="handleEdit('${exp.id}')" style="color:#38bdf8">✏️</button>
+                <button onclick="handleDelete('${exp.id}')" style="color:#ef4444">🗑️</button>
+              </div>
+            </div>
+          </div>`;
+        }).join("")}
+      </div>`;
+    }
+  }
+
+  html += `</div>`;
+  if (state.toast) html += `<div class="toast">${state.toast}</div>`;
+  app.innerHTML = html;
+}
+
+function renderFilters(months) {
+  return `<div class="filter-row">
+    <button class="filter-btn ${state.filterMonth==='all'?'active':''}" onclick="state.filterMonth='all';render()">All</button>
+    ${months.map(m => { const [y,mo]=m.split("-"); return `<button class="filter-btn ${state.filterMonth===m?'active':''}" onclick="state.filterMonth='${m}';render()">${MONTHS[parseInt(mo)]} ${y}</button>`; }).join("")}
+  </div>`;
+}
+
+function switchView(v) { state.view = v; if (v === "form") state.editingId = null; render(); }
+function cancelEdit() { state.editingId = null; state.amount = ""; state.category = ""; state.description = ""; render(); }
+
+function resetAll() {
+  if (confirm("Delete ALL local expenses? (Google Sheet data stays safe)")) {
+    state.expenses = []; saveExpenses(); showToast("🔄 Cleared"); render();
+  }
+}
+
+// ── INIT ──
+loadState();
+render();
+</script>
+</body>
+</html
